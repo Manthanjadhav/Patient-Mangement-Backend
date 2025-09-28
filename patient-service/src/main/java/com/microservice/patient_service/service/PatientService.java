@@ -6,6 +6,7 @@ import com.microservice.patient_service.entity.Patient;
 import com.microservice.patient_service.exception.EmailAlreadyExistsException;
 import com.microservice.patient_service.exception.PatientNotFoundException;
 import com.microservice.patient_service.grpc.BillingServiceGrpcClient;
+import com.microservice.patient_service.kafka.KafkaProducer;
 import com.microservice.patient_service.mapper.PatientMapper;
 import com.microservice.patient_service.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class PatientService {
     private final PatientRepository patientRepository;
     private final BillingServiceGrpcClient billingServiceGrpcClient;
+    private final KafkaProducer kafkaProducer;
 
     public List<PatientResponseDTO> getPatients(){
         List<Patient> patients = patientRepository.findAll();
@@ -34,7 +36,11 @@ public class PatientService {
         }
         Patient patient = patientRepository.save(PatientMapper.toEntity(patientRequestDTO));
         //grpc
-        billingServiceGrpcClient.createBillingAccount(patient.getId().toString(), patient.getName().toString(),patient.getEmail().toString());
+        billingServiceGrpcClient.createBillingAccount(patient.getId().toString(), patient.getName(), patient.getEmail());
+
+        //kafka
+        kafkaProducer.sendEvent(patient);
+
         PatientResponseDTO responseDTO = PatientMapper.toDTO(patient);
         return responseDTO;
     }

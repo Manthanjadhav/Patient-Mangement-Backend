@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: patient-service
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+
 #  datasource:
 #    url: jdbc:postgresql://localhost:5000/patient_service
 #    username: admin

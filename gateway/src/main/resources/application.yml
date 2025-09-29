@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: gateway          # Name of the Spring Boot application (gateway service)
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      routes:
+        ## Rest client -> http://localhost:4004/api/patients
+        ## Api gateway -> http://patient-service:4000/patients
+        ## patient service (spring boot app) -> /patients -> patients array
+        - id: patient-service-route
+          uri: http://patient-service:4000
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - StripPrefix=1
+
+        ## Rest client -> http://localhost:4004/api/docs/patients
+        ## Api gateway -> http://patient-service:4000/v3/api-docs
+        ## patient service (spring boot app) -> /v3/api-docs -> OpenAPI documentation
+        - id: api-docs-patient-route
+          uri: http://patient-service:4000
+          predicates:
+            - Path=/api/docs/patients
+          filters:
+            - RewritePath=/api/docs/patients,/v3/api-docs
+
+server:
+  port: 4004                   # Port on which the API Gateway itself runs
